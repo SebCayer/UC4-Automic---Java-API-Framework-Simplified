@@ -5,6 +5,9 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.automic.utils.ObjectTypeEnum;
 import com.uc4.api.Template;
 import com.uc4.api.UC4HostName;
@@ -16,6 +19,8 @@ import com.uc4.communication.Connection;
 
 public class Jobs extends ObjectTemplate {
 
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
+
 	public Jobs(Connection conn, boolean verbose) {
 		super(conn, verbose);
 
@@ -25,7 +30,10 @@ public class Jobs extends ObjectTemplate {
 		return new ObjectBroker(this.connection, true);
 	}
 
-	public Job getJobFromObject(UC4Object object){return (Job) object;}
+	public Job getJobFromObject(UC4Object object) {
+		return (Job) object;
+	}
+
 	// Modify a property of a Job object
 	public void setJobPriority(UC4Object object, int priority)
 			throws IOException {
@@ -108,15 +116,16 @@ public class Jobs extends ObjectTemplate {
 		ObjectBroker broker = getBrokerInstance();
 		broker.common.createObject(JobName, template, folder);
 	}
-	
+
 	public void createJob(String JobName, String TemplateName, IFolder folder)
 			throws IOException {
 		ObjectBroker broker = getBrokerInstance();
 		Template template = com.automic.utils.Utils.convertStringToTemplate(TemplateName);
-		if ( template == null){
-			System.out.println(" -- Error! Template Name " + TemplateName +" Does Not Seem To Match Any Existing Template..");
-		}else{
-		broker.common.createObject(JobName, template, folder);
+		if (template == null) {
+			LOGGER.info(" -- Error! Template Name " + TemplateName + " Does Not Seem To Match Any Existing Template..");
+		}
+		else {
+			broker.common.createObject(JobName, template, folder);
 		}
 	}
 

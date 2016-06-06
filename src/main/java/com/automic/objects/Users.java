@@ -1,9 +1,12 @@
 package com.automic.objects;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.automic.exception.AutomicAEApiException;
 import com.uc4.api.SearchResultItem;
 import com.uc4.api.Template;
 import com.uc4.api.UC4UserName;
@@ -17,42 +20,47 @@ import com.uc4.communication.Connection;
 import com.uc4.communication.requests.MoveUserToClient;
 import com.uc4.communication.requests.UserList;
 
-public class Users extends ObjectTemplate{
+public class Users extends ObjectTemplate {
+
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	public Users(Connection conn, boolean verbose) {
 		super(conn, verbose);
-		
+
 	}
-	private ObjectBroker getBrokerInstance(){
-		return new ObjectBroker(this.connection,true);
+
+	private ObjectBroker getBrokerInstance() {
+		return new ObjectBroker(this.connection, true);
 	}
-	
-	public User getUserFromObject(UC4Object object){return (User) object;}
-	
-	public UserList getUserList() throws IOException{
+
+	public User getUserFromObject(UC4Object object) {
+		return (User) object;
+	}
+
+	public UserList getUserList() throws IOException {
 		UserList req = new UserList();
 		connection.sendRequestAndWait(req);
 		if (req.getMessageBox() != null) {
-			System.out.println(" -- "+req.getMessageBox().getText().toString().replace("\n", ""));
+			LOGGER.info(" -- " + req.getMessageBox().getText().toString().replace("\n", ""));
 		}
 		return req;
 	}
-	
-	public User getUserFromName(String UserName) throws IOException{
+
+	public User getUserFromName(String UserName) throws IOException {
 		ObjectBroker broker = getBrokerInstance();
 		UC4Object obj = broker.common.openObject(UserName, false);
 		User user = (User) obj;
 		return user;
 	}
-	
-	public User createUserInCurrentClient(String Username, IFolder folder) throws IOException{
+
+	public User createUserInCurrentClient(String Username, IFolder folder) throws IOException {
 		ObjectBroker broker = getBrokerInstance();
 		broker.common.createObject(Username, Template.USER, folder);
 		User user = getUserFromObject(broker.common.openObject(Username, false));
 		return user;
 	}
-	
-	public User createAdminUserInCurrentClient(String Username, String Password, IFolder folder) throws IOException{
+
+	public User createAdminUserInCurrentClient(String Username, String Password, IFolder folder) throws IOException {
 		ObjectBroker broker = getBrokerInstance();
 		broker.common.createObject(Username, Template.USER, folder);
 		User user = getUserFromObject(broker.common.openObject(Username, false));
@@ -79,7 +87,7 @@ public class Users extends ObjectTemplate{
 		all.setName("*");
 		all.setType(Type.ALL);
 		user.authorizations().addRight(all);
-		
+
 		user.privileges().setPrivilege(Privilege.ACCESS_NOFOLDER, true);
 		user.privileges().setPrivilege(Privilege.ACCESS_RECYCLE_BIN, true);
 		user.privileges().setPrivilege(Privilege.ACCESS_SYSTEM_OVERVIEW, true);
@@ -122,52 +130,57 @@ public class Users extends ObjectTemplate{
 		broker.common.saveObject(user);
 		return user;
 	}
-	
-	public void moveUserToClient(String UserName, String FolderName, int client) throws IOException{
+
+	public void moveUserToClient(String UserName, String FolderName, int client) throws IOException, AutomicAEApiException {
 		int currentClient = Integer.parseInt(this.connection.getSessionInfo().getClient());
-		if(currentClient != 0){
-			System.out.println(" -- Error: You can only move a client when connected to Client 0. Current Client is: "+currentClient);
-			System.exit(1);
+		if (currentClient != 0) {
+			LOGGER.error(" -- Error: You can only move a client when connected to Client 0. Current Client is: " + currentClient);
+			throw new AutomicAEApiException(
+					" -- Error: You can only move a client when connected to Client 0. Current Client is: " + currentClient);
 		}
 		UC4UserName user = new UC4UserName(UserName);
 		ObjectBroker broker = getBrokerInstance();
 		IFolder folder = broker.folders.getFolderByName(FolderName);
-		MoveUserToClient req = new MoveUserToClient(user,folder,client);
+		MoveUserToClient req = new MoveUserToClient(user, folder, client);
 		connection.sendRequestAndWait(req);
 		if (req.getMessageBox() != null) {
-			System.out.println(" -- "+req.getMessageBox().getText().toString().replace("\n", ""));
-		}else{
-			Say(" ++ User: "+UserName+" successfully moved to Client: "+client);
+			LOGGER.info(" -- " + req.getMessageBox().getText().toString().replace("\n", ""));
+		}
+		else {
+			LOGGER.debug(" ++ User: " + UserName + " successfully moved to Client: " + client);
 		}
 	}
-	public boolean moveUserToClient(String UserName, int client) throws IOException{
+
+	public boolean moveUserToClient(String UserName, int client) throws IOException, AutomicAEApiException {
 		int currentClient = Integer.parseInt(this.connection.getSessionInfo().getClient());
-		if(currentClient != 0){
-			System.out.println(" -- Error: You can only move a client when connected to Client 0. Current Client is: "+currentClient);
-			System.exit(1);
+		if (currentClient != 0) {
+			LOGGER.error(" -- Error: You can only move a client when connected to Client 0. Current Client is: " + currentClient);
+			throw new AutomicAEApiException(
+					" -- Error: You can only move a client when connected to Client 0. Current Client is: " + currentClient);
 		}
 		UC4UserName user = new UC4UserName(UserName);
 		ObjectBroker broker = getBrokerInstance();
 		List<SearchResultItem> foundUsers = broker.common.searchUsersAndGroups(user.getName());
-		if(foundUsers.isEmpty()){
-			System.out.println(" \t -- Error, Could Not Find User: " + user.getName());
+		if (foundUsers.isEmpty()) {
+			LOGGER.error(" \t -- Error, Could Not Find User: " + user.getName());
 			return false;
 		}
-		if(foundUsers.size()>1){
-			System.out.println(" \t -- Error, Found Multiple Users Matching: " + user.getName());
+		if (foundUsers.size() > 1) {
+			LOGGER.error(" \t -- Error, Found Multiple Users Matching: " + user.getName());
 			return false;
 		}
 		SearchResultItem item = foundUsers.get(0);
-		
+
 		IFolder UserFolder = broker.folders.getFolderByName(item.getFolder());
 
-		MoveUserToClient req = new MoveUserToClient(user,UserFolder,client);
+		MoveUserToClient req = new MoveUserToClient(user, UserFolder, client);
 		connection.sendRequestAndWait(req);
 		if (req.getMessageBox() != null) {
-			System.out.println(" -- "+req.getMessageBox().getText().toString().replace("\n", ""));
+			LOGGER.error(" -- " + req.getMessageBox().getText().toString().replace("\n", ""));
 			return false;
-		}else{
-			Say(" ++ User: "+UserName+" successfully moved to Client: "+client);
+		}
+		else {
+			LOGGER.debug(" ++ User: " + UserName + " successfully moved to Client: " + client);
 			return true;
 		}
 	}
