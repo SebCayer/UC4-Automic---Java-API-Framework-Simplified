@@ -17,8 +17,6 @@ public class ConnectionManager {
 	 */
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
-	private Connection conn = null;
-
 	public ArrayList<Connection> ConnectionList = new ArrayList<Connection>();
 
 	public ConnectionManager() {
@@ -28,7 +26,7 @@ public class ConnectionManager {
 	public Connection connectToClient(AECredentials credentials) throws IOException, AutomicAEApiException {
 
 		LOGGER.debug("Authenticating to Client " + credentials.getAEClientToConnect() + " with user " + credentials.getAEUserLogin());
-		conn = Connection.open(credentials.getAEHostnameOrIp(), credentials.getAECPPort());
+		Connection conn = openConnection(credentials);
 
 		CreateSession sess = conn.login(credentials.getAEClientToConnect(), credentials.getAEUserLogin(),
 				credentials.getAEDepartment(), credentials.getAEUserPassword(), credentials.getAEMessageLanguage());
@@ -49,9 +47,13 @@ public class ConnectionManager {
 
 	}
 
+	protected Connection openConnection(AECredentials credentials) throws IOException {
+		return Connection.open(credentials.getAEHostnameOrIp(), credentials.getAECPPort());
+	}
+
 	public Connection switchToClient(AECredentials credentials) throws IOException {
-		conn = Connection.open(credentials.getAEHostnameOrIp(), credentials.getAECPPort());
-		CreateSession sess = conn.login(credentials.getAEClientToConnect(), credentials.getAEUserLogin(),
+		Connection conn = openConnection(credentials);
+		conn.login(credentials.getAEClientToConnect(), credentials.getAEUserLogin(),
 				credentials.getAEDepartment(), credentials.getAEUserPassword(), credentials.getAEMessageLanguage());
 		ConnectionList.add(conn);
 		return conn;
@@ -64,5 +66,18 @@ public class ConnectionManager {
 			}
 		}
 		return null;
+	}
+
+	public void closeAllConnection() {
+		for (Connection conn : ConnectionList) {
+			try {
+				conn.close();
+			}
+			catch (IOException e) {
+				// Silent exception on close
+				LOGGER.warn(e.getMessage(), e);
+			}
+		}
+		ConnectionList.clear();
 	}
 }
