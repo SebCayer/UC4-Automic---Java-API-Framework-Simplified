@@ -62,7 +62,7 @@ public class Clients extends ObjectTemplate {
 			LOGGER.info(" -- " + req.getMessageBox().getText().toString().replace("\n", ""));
 		}
 		else {
-			LOGGER.error(" ++ Client: " + connection.getSessionInfo().getClient() + " Successfully Stopped.");
+			LOGGER.debug(" ++ Client: " + connection.getSessionInfo().getClient() + " Successfully Stopped.");
 		}
 	}
 
@@ -73,7 +73,7 @@ public class Clients extends ObjectTemplate {
 			LOGGER.info(" -- " + req.getMessageBox().getText().toString().replace("\n", ""));
 		}
 		else {
-			LOGGER.error(" ++ Client: " + connection.getSessionInfo().getClient() + " Successfully Started.");
+			LOGGER.debug(" ++ Client: " + connection.getSessionInfo().getClient() + " Successfully Started.");
 		}
 	}
 
@@ -84,7 +84,7 @@ public class Clients extends ObjectTemplate {
 			LOGGER.info(" -- " + req.getMessageBox().getText().toString().replace("\n", ""));
 		}
 		else {
-			LOGGER.error(" ++ Client: " + Client.getClient() + " Successfully Stopped.");
+			LOGGER.debug(" ++ Client: " + Client.getClient() + " Successfully Stopped.");
 		}
 	}
 
@@ -95,7 +95,7 @@ public class Clients extends ObjectTemplate {
 			LOGGER.info(" -- " + req.getMessageBox().getText().toString().replace("\n", ""));
 		}
 		else {
-			LOGGER.error(" ++ Client: " + Client.getClient() + " Successfully Started.");
+			LOGGER.debug(" ++ Client: " + Client.getClient() + " Successfully Started.");
 		}
 	}
 
