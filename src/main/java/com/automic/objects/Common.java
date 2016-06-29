@@ -782,7 +782,7 @@ public class Common extends ObjectTemplate {
 		connection.sendRequestAndWait(open);
 
 		if (open.getMessageBox() != null) {
-			LOGGER.error(" -- " + open.getMessageBox().toString().replace("\n", ""));
+			LOGGER.error("openObject : " + name + " -- " + open.getMessageBox().toString().replace("\n", ""));
 			return null;
 		}
 		return open.getUC4Object();
@@ -1067,12 +1067,22 @@ public class Common extends ObjectTemplate {
 
 		for (int i = 0; i < allFolders.size(); i++) {
 			IFolder myFolder = allFolders.get(i);
+			LOGGER.debug("getAllObjectsWithNameFilter - myFolder name : " + myFolder.getName());
 			FolderList itemList = broker.folders.getFolderContent(myFolder);
 			Iterator<FolderListItem> it = itemList.iterator();
+			if (LOGGER.isDebugEnabled()) {
+
+			}
+			LOGGER.debug("getAllObjectsWithNameFilter - itemList size : " + itemList.size());
+			LOGGER.debug("getAllObjectsWithNameFilter - Search type : " + objectType);
+			LOGGER.debug("getAllObjectsWithNameFilter - Search filter : " + filter);
 			while (it.hasNext()) {
 				FolderListItem item = it.next();
+				LOGGER.debug("getAllObjectsWithNameFilter - Item name : " + item.getName());
+				LOGGER.debug("getAllObjectsWithNameFilter - Item type : " + item.getObjectType());
+
 				if (item.getObjectType().equalsIgnoreCase(objectType) && item.getName().matches(filter)) {
-					UC4Object obj = broker.common.openObject(item.getName(), true);
+					UC4Object obj = broker.common.openObject(item.getName(), true); // TODO FIX ME null object can be added....
 					ObjList.add(obj);
 				}
 			}
